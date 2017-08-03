@@ -73,7 +73,10 @@ namespace SQLServerDBManager
                     oRestore.Database = NewDBname;
                     oRestore.SqlRestore(oServer);
 
+                    Logger.Registrar(DateTime.Now.ToString("HH:mm:ss") + "  Iniciando restauración.");
                     oRestore.Devices.Remove(oDevice);
+                    Logger.Registrar(DateTime.Now.ToString("HH:mm:ss") + "  Finalizando restauración.");
+
                     oConnection.Disconnect();
                 }
             }catch (Exception ex){
@@ -101,11 +104,17 @@ namespace SQLServerDBManager
                 oBackup.Devices.Add(oDevice);
                 oBackup.Incremental = false;
 
+                Logger.Registrar(DateTime.Now.ToString("HH:mm:ss") + "  Iniciando respaldo.");
                 oBackup.SqlBackup(oServer);
+                Logger.Registrar(DateTime.Now.ToString("HH:mm:ss") + "  Finalizando respaldo.");
+
                 oBackup.Devices.Remove(oDevice);
 
+                Logger.Registrar(DateTime.Now.ToString("HH:mm:ss") + "  Iniciando borrado de BD '" + DBname + "'.");
                 oServer.KillAllProcesses(DBname);
                 oDatabase.Drop();
+                Logger.Registrar(DateTime.Now.ToString("HH:mm:ss") + "  Finalizando borrado de BD '" + DBname + "'.");
+                                
                 oConnection.Disconnect();
             }catch (Exception ex){
                 Logger.RegistrarError("No fue posible crear el repaldo de la BD. Detalles: " + Environment.NewLine + ex.Message);
@@ -153,7 +162,8 @@ namespace SQLServerDBManager
                 Database oDataBase = oServer.Databases[DBname];
 
                 ////Delete views
-                if (deleteViews){ 
+                if (deleteViews){
+                    Logger.Registrar(DateTime.Now.ToString("HH:mm:ss") + "  Borrando vistas de BD '"+DBname+"'.");
                     IEnumerable<View> enumViews = oDataBase.Views.Cast<View>().Where(x => !x.IsSystemObject);
                     while (enumViews != null && enumViews.Count() > 0)
                     {
@@ -163,6 +173,7 @@ namespace SQLServerDBManager
 
                 ////Delete Stored Procedures
                 if (deleteSPs){
+                    Logger.Registrar(DateTime.Now.ToString("HH:mm:ss") + "  Borrando procedimientos almacenados de BD '" + DBname + "'.");
                     IEnumerable<StoredProcedure> enumStoredProcedures = oDataBase.StoredProcedures.Cast<StoredProcedure>().Where(x => !x.IsSystemObject);
                     while (enumStoredProcedures != null && enumStoredProcedures.Count() > 0)
                     {
@@ -172,6 +183,7 @@ namespace SQLServerDBManager
 
                 ////Delete Functions
                 if (deleteFns){
+                    Logger.Registrar(DateTime.Now.ToString("HH:mm:ss") + "  Borrando funciones de usuario de BD '" + DBname + "'.");
                     IEnumerable<UserDefinedFunction> enumFunctions = oDataBase.UserDefinedFunctions.Cast<UserDefinedFunction>().Where(x => !x.IsSystemObject);
                     while (enumFunctions != null && enumFunctions.Count() > 0)
                     {
@@ -181,6 +193,7 @@ namespace SQLServerDBManager
 
                 ////Delete Triggers
                 if (deleteTriggers){
+                    Logger.Registrar(DateTime.Now.ToString("HH:mm:ss") + "  Borrando disparadores de BD '" + DBname + "'.");
                     IEnumerable<Trigger> enumTriggers = oDataBase.Triggers.Cast<Trigger>().Where(x => !x.IsSystemObject);
                     while (enumTriggers != null && enumTriggers.Count() > 0)
                     {
@@ -190,6 +203,7 @@ namespace SQLServerDBManager
 
                 //Delete Synonyms
                 if (deleteSynonims) {
+                    Logger.Registrar(DateTime.Now.ToString("HH:mm:ss") + "  Borrando sinonimos de BD '" + DBname + "'.");
                     IEnumerable<Synonym> aSynonyms = oDataBase.Synonyms.Cast<Synonym>().Where(x => !x.IsSchemaOwned);
                     while (aSynonyms != null && aSynonyms.Count() > 0)
                     {
@@ -199,6 +213,7 @@ namespace SQLServerDBManager
 
                 //Delete Foreign Keys for each table
                 if (deleteFKs){
+                    Logger.Registrar(DateTime.Now.ToString("HH:mm:ss") + "  Borrando claves foraneas de BD '" + DBname + "'.");
                     foreach (Table oTable in oDataBase.Tables)
                     {
                         if (!oTable.IsSystemObject)
@@ -234,7 +249,9 @@ namespace SQLServerDBManager
                 FileInfo InfoArchivo = new FileInfo(sqlScript);
                 string script = InfoArchivo.OpenText().ReadToEnd();
 
+                Logger.Registrar(DateTime.Now.ToString("HH:mm:ss") + "  Iniciando script.");
                 oDataBase.ExecuteNonQuery(script);
+                Logger.Registrar(DateTime.Now.ToString("HH:mm:ss") + "  Finalizando script.");
 
                 oConnection.Disconnect();
             }
