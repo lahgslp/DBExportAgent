@@ -26,19 +26,19 @@ namespace DBExportAgent
             string ResultingBackupFile = "";
             string NewDBName = "";
             string Script = "";
-
-            int result = DBManager.RestoreDB(SAConnectionString, ProductionBackupFile, NewDBName);
+            Registrador.IRegistroEjecucion Logger = new Registrador.RegistroEjecucionArchivo("Logger");
+            int result = DBManager.RestoreDB(SAConnectionString, ProductionBackupFile, NewDBName, Logger);
 
             if (result == 0)
             {
-                result = DBManager.ClearDB(DBOwnerConnectionString, NewDBName);
+                result = DBManager.ClearDB(DBOwnerConnectionString, NewDBName, Logger);
 
                 if (result == 0)
                 {
-                    result = DBManager.ExecuteScript(DBOwnerConnectionString, NewDBName, Script);
+                    result = DBManager.ExecuteScript(DBOwnerConnectionString, NewDBName, Script, Logger);
                     if (result == 0)
                     {
-                        result = DBManager.BackupDB(SAConnectionString, NewDBName, ResultingBackupFile);
+                        result = DBManager.BackupDB(SAConnectionString, NewDBName, ResultingBackupFile, Logger);
                         if (result == 0)
                         {
                             result = DBManager.DropDB(SAConnectionString, NewDBName);

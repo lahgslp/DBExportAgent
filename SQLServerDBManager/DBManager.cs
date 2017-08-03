@@ -17,7 +17,7 @@ namespace SQLServerDBManager
         public string sUsuario = "";
         public string sContrasenia = "";
 
-        private static ServerConnection ConexionConServidor(string servidor, string usuario, string contrasenia)
+        private static ServerConnection Connection(string servidor, string usuario, string contrasenia)
         {
             ServerConnection conexion = new ServerConnection(servidor);
 
@@ -30,22 +30,23 @@ namespace SQLServerDBManager
 
         private static ServerConnection Connection(string connectionString)
         {
-            //String connectionString = "Data Source=(local);Initial Catalog=AdventureWorks2012;Integrated Security=SSPI;";
+            //String connectionString = "Data Source=.\\SQLEXPRESS;Initial Catalog=Northwind;Integrated Security=True;MultipleActiveResultSets=True";
             SqlConnection sqlConnection = new SqlConnection(connectionString);
             ServerConnection oServerConnection = new ServerConnection(sqlConnection);
 
             return oServerConnection;
         }
 
-        public static int RestoreDB(string ConnectionString, string SourceBAKfile, string NewDBname)
+        public static int RestoreDB(string ConnectionString, string SourceBAKfile, string NewDBname, Registrador.IRegistroEjecucion Logger)
         {
             try{
                 ServerConnection oConnection = Connection(ConnectionString); ;
                 Server oServer = new Server(oConnection);
                 Database oDataBase = oServer.Databases[NewDBname];
 
-                if (oDataBase != null){
-                    throw new Exception("ya existe una BD con el nombre '" + NewDBname + "', por lo cual no es posible restaurar la BD y así evitar perdida de información.");
+                if (oDataBase != null){                    
+                    Logger.RegistrarError("ya existe una BD con el nombre '" + NewDBname + "', por lo cual no es posible restaurar la BD y así evitar perdida de información.");
+                    return 2;
                 }
                 else{
                     BackupDeviceItem oDevice = new BackupDeviceItem(SourceBAKfile, DeviceType.File);
@@ -76,14 +77,14 @@ namespace SQLServerDBManager
                     oConnection.Disconnect();
                 }
             }catch (Exception ex){
-                string msg = ex.Message;
+                Logger.RegistrarError("No fue posible la restaurar la BD. Detalles: " + Environment.NewLine + ex.Message);
                 return 1;
             }
 
             return 0;
         }
 
-        public static int BackupDB(string ConnectionString, string DBname, string DestinationBAKFile)
+        public static int BackupDB(string ConnectionString, string DBname, string DestinationBAKFile, Registrador.IRegistroEjecucion Logger)
         {
             try{
                 ServerConnection oConnection = Connection(ConnectionString);
@@ -107,7 +108,7 @@ namespace SQLServerDBManager
                 oDatabase.Drop();
                 oConnection.Disconnect();
             }catch (Exception ex){
-                string msg = ex.Message;
+                Logger.RegistrarError("No fue posible crear el repaldo de la BD. Detalles: " + Environment.NewLine + ex.Message);
                 return 1;
             }
 
@@ -141,7 +142,7 @@ namespace SQLServerDBManager
         //    return 0;
         //}
 
-        public static int ClearDB(string ConnectionString, string DBname, bool deleteSPs = true, bool deleteFns = true, 
+        public static int ClearDB(string ConnectionString, string DBname, Registrador.IRegistroEjecucion Logger, bool deleteSPs = true, bool deleteFns = true, 
             bool deleteViews = true, bool deleteTriggers = true, bool deleteFKs = true, bool deleteSynonims = true)
         {
 
@@ -215,14 +216,14 @@ namespace SQLServerDBManager
             }
             catch (Exception ex)
             {
-                string msg = ex.Message;
+                Logger.RegistrarError("No fue posible limpiar la BD. Detalles: " + Environment.NewLine + ex.Message);
                 return 1;
             }
 
             return 0;
         }
 
-        public static int ExecuteScript(string ConnectionString, string DBname, string sqlScript)
+        public static int ExecuteScript(string ConnectionString, string DBname, string sqlScript, Registrador.IRegistroEjecucion Logger)
         {
             try
             {
@@ -239,7 +240,7 @@ namespace SQLServerDBManager
             }
             catch (Exception ex)
             {
-                string msj = ex.Message;
+                Logger.RegistrarError("No fue posible ejecutar el script. Detalles: " + Environment.NewLine + ex.Message);
                 return 1;
             }
 

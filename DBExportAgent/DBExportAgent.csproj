@@ -50,6 +50,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\ArtluxASN\Registrador\Registrador.csproj">
+      <Project>{4e67fd29-7914-4c99-81ad-d89c666ff102}</Project>
+      <Name>Registrador</Name>
+    </ProjectReference>
     <ProjectReference Include="..\SQLServerDBManager\SQLServerDBManager.csproj">
       <Project>{a74cb3f2-24e5-4e9d-a0b4-15f33a955c7e}</Project>
       <Name>SQLServerDBManager</Name>

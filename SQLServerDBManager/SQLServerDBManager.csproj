@@ -55,6 +55,12 @@
     <Compile Include="DBManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\ArtluxASN\Registrador\Registrador.csproj">
+      <Project>{4e67fd29-7914-4c99-81ad-d89c666ff102}</Project>
+      <Name>Registrador</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
