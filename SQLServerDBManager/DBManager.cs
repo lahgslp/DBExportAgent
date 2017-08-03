@@ -18,6 +18,11 @@ namespace SQLServerDBManager
             return 0;
         }
 
+        public static int BackupDB(string DBName, string DestinationBAKFile)
+        {
+            return 0;
+        }
+
         public static int DropDB(string ConnectionString, string DBName)
         {
             //Step 1: Get the names of physical files for DB
