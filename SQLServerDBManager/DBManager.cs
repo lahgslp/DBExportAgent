@@ -71,11 +71,11 @@ namespace SQLServerDBManager
                     oRestore.RelocateFiles.Add(LogFile);
 
                     oRestore.Database = NewDBname;
-                    oRestore.SqlRestore(oServer);
-
                     Logger.Registrar(DateTime.Now.ToString("HH:mm:ss") + "  Iniciando restauración.");
-                    oRestore.Devices.Remove(oDevice);
+                    oRestore.SqlRestore(oServer);
                     Logger.Registrar(DateTime.Now.ToString("HH:mm:ss") + "  Finalizando restauración.");
+
+                    oRestore.Devices.Remove(oDevice);
 
                     oConnection.Disconnect();
                 }
