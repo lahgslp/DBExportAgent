@@ -25,7 +25,7 @@ namespace Registrador
             if (NombreArchivo != String.Empty)
             {
                 //string folder = Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData) + "\\" + "GeneradorASNWin";
-                string ApplicationName = System.Diagnostics.Process.GetCurrentProcess().ProcessName;
+                string ApplicationName = AppDomain.CurrentDomain.FriendlyName.Split('.')[0];
                 string folder = Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData) + "\\" + ApplicationName;
                 if (!Directory.Exists(folder))
                 {
