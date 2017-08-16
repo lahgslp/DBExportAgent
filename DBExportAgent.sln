@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DBExportAgent", "DBExportAg
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SQLServerDBManager", "SQLServerDBManager\SQLServerDBManager.csproj", "{A74CB3F2-24E5-4E9D-A0B4-15F33A955C7E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Registrador", "..\ArtluxASN\Registrador\Registrador.csproj", "{4E67FD29-7914-4C99-81AD-D89C666FF102}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Registrador", "Registrador\Registrador.csproj", "{4E67FD29-7914-4C99-81AD-D89C666FF102}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

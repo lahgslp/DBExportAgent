@@ -56,7 +56,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\ArtluxASN\Registrador\Registrador.csproj">
+    <ProjectReference Include="..\Registrador\Registrador.csproj">
       <Project>{4e67fd29-7914-4c99-81ad-d89c666ff102}</Project>
       <Name>Registrador</Name>
     </ProjectReference>
