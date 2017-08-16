@@ -40,7 +40,7 @@ namespace SQLServerDBManager
         public static int RestoreDB(string ConnectionString, string SourceBAKfile, string NewDBname, Registrador.IRegistroEjecucion Logger)
         {
             try{
-                ServerConnection oConnection = Connection(ConnectionString); ;
+                ServerConnection oConnection = Connection(ConnectionString);
                 Server oServer = new Server(oConnection);
                 Database oDataBase = oServer.Databases[NewDBname];
 
@@ -99,7 +99,7 @@ namespace SQLServerDBManager
                 oBackup.Action = BackupActionType.Database;
 
                 oBackup.BackupSetDescription = "Respaldo de '" + DestinationBAKFile + "'.";
-                oBackup.BackupSetName = DestinationBAKFile + ".bak";
+                oBackup.BackupSetName = DestinationBAKFile;
                 oBackup.Database = DBname;
                 oBackup.Devices.Add(oDevice);
                 oBackup.Incremental = false;
@@ -152,7 +152,7 @@ namespace SQLServerDBManager
         //}
 
         public static int ClearDB(string ConnectionString, string DBname, Registrador.IRegistroEjecucion Logger, bool deleteSPs = true, bool deleteFns = true, 
-            bool deleteViews = true, bool deleteTriggers = true, bool deleteFKs = true, bool deleteSynonims = true)
+            bool deleteViews = true, bool deleteTriggers = true, bool deleteFKs = true, bool deleteSynonyms = true, bool deleteComputedColumns = true, bool deleteIndexes = true)
         {
 
             try
@@ -160,6 +160,29 @@ namespace SQLServerDBManager
                 ServerConnection oConnection =  Connection(ConnectionString); 
                 Server oServer = new Server(oConnection);
                 Database oDataBase = oServer.Databases[DBname];
+
+                if (deleteIndexes)
+                {
+                    foreach (Table t in oDataBase.Tables)
+                    {
+                        if (!t.IsSystemObject)
+                        {
+                            List<Index> tobeDeleted = new List<Index>();
+                            foreach (Index i in t.Indexes)
+                            {
+                                if(i.IndexKeyType != IndexKeyType.DriPrimaryKey)
+                                {
+                                    tobeDeleted.Add(i);
+                                }
+                            }
+
+                            foreach (Index tbd in tobeDeleted)
+                            {
+                                tbd.Drop();
+                            }
+                        }
+                    }
+                }
 
                 ////Delete views
                 if (deleteViews){
@@ -178,6 +201,28 @@ namespace SQLServerDBManager
                     while (enumStoredProcedures != null && enumStoredProcedures.Count() > 0)
                     {
                         enumStoredProcedures.ElementAt(0).Drop();
+                    }
+                }
+
+                //Delete computed columns
+                if (deleteComputedColumns)
+                {
+                    Logger.Registrar(DateTime.Now.ToString("HH:mm:ss") + "  Borrando computed columns de BD '" + DBname + "'.");
+                    foreach (Table t in oDataBase.Tables)
+                    {
+                        List<Column> tobeDeleted = new List<Column>();
+                        foreach (Column c in t.Columns)
+                        {
+                            if (c.Computed)
+                            {
+                                tobeDeleted.Add(c);
+                            }
+                        }
+
+                        foreach (Column tbd in tobeDeleted)
+                        {
+                            tbd.Drop();
+                        }
                     }
                 }
 
@@ -202,7 +247,7 @@ namespace SQLServerDBManager
                 }
 
                 //Delete Synonyms
-                if (deleteSynonims) {
+                if (deleteSynonyms) {
                     Logger.Registrar(DateTime.Now.ToString("HH:mm:ss") + "  Borrando sinonimos de BD '" + DBname + "'.");
                     IEnumerable<Synonym> aSynonyms = oDataBase.Synonyms.Cast<Synonym>().Where(x => !x.IsSchemaOwned);
                     while (aSynonyms != null && aSynonyms.Count() > 0)
