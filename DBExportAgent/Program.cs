@@ -26,7 +26,7 @@ namespace DBExportAgent
             string ResultingBackupFile = "";
             string NewDBName = "";
             string Script = "";
-            Registrador.IRegistroEjecucion Logger = new Registrador.RegistroEjecucionArchivo("Logger");
+            Registrador.IRegistroEjecucion Logger = new Registrador.RegistroEjecucionArchivo("Log_"+ NewDBName +"_"+ DateTime.Now.ToString("yyyyMMdd HHmmss"));
             int result = DBManager.RestoreDB(SAConnectionString, ProductionBackupFile, NewDBName, Logger);
 
             if (result == 0)
@@ -38,23 +38,32 @@ namespace DBExportAgent
                     result = DBManager.ExecuteScript(DBOwnerConnectionString, NewDBName, Script, Logger);
                     if (result == 0)
                     {
-                        result = DBManager.BackupDB(SAConnectionString, NewDBName, ResultingBackupFile, Logger);
+                        result = DBManager.ShrinkDB(DBOwnerConnectionString, NewDBName, Logger);
                         if (result == 0)
-                        {
-                            result = DBManager.DropDB(SAConnectionString, NewDBName);
+                        {                           
+                            result = DBManager.BackupDB(SAConnectionString, NewDBName, ResultingBackupFile, Logger);
                             if (result == 0)
                             {
-                                //SUCCESS!!!
+                                result = DBManager.DropDB(SAConnectionString, NewDBName, Logger);
+                                if (result == 0)
+                                {
+                                    //SUCCESS!!!
+                                }
+                                else
+                                {
+                                    //Log error
+                                }
                             }
                             else
                             {
                                 //Log error
-                            }
+                            }                          
+                            
                         }
-                        else
-                        {
-                            //Log error
+                        else {
+
                         }
+                        
                     }
                     else
                     {
