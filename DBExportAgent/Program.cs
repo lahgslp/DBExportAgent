@@ -21,12 +21,12 @@ namespace DBExportAgent
         static void Main(string[] args)
         {
             
-            string SAConnectionString = "Data Source=localhost;Initial Catalog=master;Persist Security Info=True;User ID=sa;Password=tupassword"; //This it to use the System Administrator credentials
-            string DBOwnerConnectionString = "Data Source=localhost;Initial Catalog=master;Persist Security Info=True;User ID=sa;Password=tupassword"; //This it to use the owner of the new DB credentials. QUESTION: Can they be the same? Should they?
-            string ProductionBackupFile = "vt3_backup_2017_08_08_013001_2579079.bak";
-            string ResultingBackupFile = "vt3_backup_2017_08_08_013001_2579079_filtrado";
-            string NewDBName = "vt3_backup_2017_08_08_013001_2579079_Restored";
-            string Script = "Consulta.sql";
+            string SAConnectionString = ""; //This it to use the System Administrator credentials
+            string DBOwnerConnectionString = ""; //This it to use the owner of the new DB credentials. QUESTION: Can they be the same? Should they?
+            string ProductionBackupFile = "";
+            string ResultingBackupFile = "";
+            string NewDBName = "";
+            string Script = "";
 
             Registrador.IRegistroEjecucion Logger = new Registrador.RegistroEjecucionArchivo("Log_"+ NewDBName +"_"+ DateTime.Now.ToString("yyyyMMdd HHmmss"));
             int result = DBManager.RestoreDB(SAConnectionString, ProductionBackupFile, NewDBName, Logger);
