@@ -55,6 +55,8 @@ namespace SQLServerDBManager
                     RelocateFile LogFile = new RelocateFile();
                     string Path = oServer.MasterDBPath;
 
+                    oServer.ConnectionContext.StatementTimeout = 6000;
+
                     oRestore.Devices.Add(oDevice);
 
                     string LogicFileName_MDF = oRestore.ReadFileList(oServer).Rows[0][0].ToString();
@@ -65,11 +67,12 @@ namespace SQLServerDBManager
                     LogFile.LogicalFileName = LogicFileName_LDF;
                     LogFile.PhysicalFileName = Path + "\\" + NewDBname + ".ldf";
 
-                    oRestore.NoRecovery = false;            
+                    oRestore.NoRecovery = false;
                     oRestore.RelocateFiles.Add(DataFile);
                     oRestore.RelocateFiles.Add(LogFile);
-                    
+
                     oRestore.Database = NewDBname;
+
                     
 
                     Logger.Registrar(DateTime.Now.ToString("HH:mm:ss") + "  Iniciando restauración.");
@@ -78,10 +81,21 @@ namespace SQLServerDBManager
 
                     oRestore.Devices.Remove(oDevice);
 
+
+                    oDataBase = oServer.Databases[NewDBname];
+                    oDataBase.RecoveryModel = RecoveryModel.Simple;
+                    oDataBase.Alter();
+
                     oConnection.Disconnect();
                 }
             } catch (Exception ex) {
-                Logger.RegistrarError("No fue posible la restaurar la BD con el nombre '"+NewDBname+"' . Detalles: " + Environment.NewLine + ex.Message);
+                Exception InnerEx = ex.InnerException;
+                string MoreDetails = InnerEx != null ? Environment.NewLine + "Mas detalles: " + InnerEx.Message:"";
+
+                if(InnerEx!=null)
+                    MoreDetails += InnerEx.InnerException != null ? Environment.NewLine + InnerEx.InnerException.Message : "";
+
+                Logger.RegistrarError("No fue posible la restaurar la BD con el nombre '"+NewDBname+"' . Detalles: " + Environment.NewLine + ex.Message + MoreDetails);
                 DropDB(ConnectionString, NewDBname, Logger);
                 return 1;
             }
@@ -97,17 +111,16 @@ namespace SQLServerDBManager
                 Database oDatabase = oServer.Databases[DBname];
                 Backup oBackup = new Backup();
                 BackupDeviceItem oDevice = new BackupDeviceItem(DestinationBAKFile + ".bak", DeviceType.File);
-
+                
                 oBackup.Action = BackupActionType.Database;
-
                 oBackup.BackupSetDescription = "Respaldo de '" + DestinationBAKFile + "'.";
                 oBackup.BackupSetName = DestinationBAKFile;
                 oBackup.Database = DBname;
                 oBackup.Devices.Add(oDevice);
                 oBackup.Incremental = false;
-
-                Logger.Registrar(DateTime.Now.ToString("HH:mm:ss") + "  Iniciando respaldo.");
-                
+                oBackup.CompressionOption = BackupCompressionOptions.On;
+                             
+                Logger.Registrar(DateTime.Now.ToString("HH:mm:ss") + "  Iniciando respaldo.");                
                 oBackup.SqlBackup(oServer);
                 Logger.Registrar(DateTime.Now.ToString("HH:mm:ss") + "  Finalizando respaldo.");
 
@@ -115,7 +128,13 @@ namespace SQLServerDBManager
                                                                
                 oConnection.Disconnect();
             }catch (Exception ex){
-                Logger.RegistrarError("No fue posible crear el repaldo de la BD. Detalles: " + Environment.NewLine + ex.Message);
+                Exception InnerEx = ex.InnerException;
+                string MoreDetails = InnerEx != null ? Environment.NewLine + "Mas detalles: " + InnerEx.Message : "";
+
+                if (InnerEx != null)
+                    MoreDetails += InnerEx.InnerException != null ? Environment.NewLine + InnerEx.InnerException.Message : "";
+
+                Logger.RegistrarError("No fue posible crear el repaldo de la BD. Detalles: " + Environment.NewLine + ex.Message + MoreDetails);
                 DropDB(ConnectionString, DBname, Logger);
                 return 1;
             }
@@ -131,15 +150,20 @@ namespace SQLServerDBManager
                 Server oServer = new Server(oConnection);
                 Database oDatabase = oServer.Databases[DBName];
 
-                Logger.Registrar(DateTime.Now.ToString("HH:mm:ss") + "  Iniciando compactado de BD '" + DBName + "'.");
-                oDatabase.Shrink(100, ShrinkMethod.NoTruncate);
-                
+                Logger.Registrar(DateTime.Now.ToString("HH:mm:ss") + "  Iniciando compactado de BD '" + DBName + "'.");                
+                oDatabase.Shrink(5, ShrinkMethod.TruncateOnly);                               
                 Logger.Registrar(DateTime.Now.ToString("HH:mm:ss") + "  Finalizando compactado de BD '" + DBName + "'.");
                 
                 oConnection.Disconnect();
             }
             catch (Exception ex) {
-                Logger.RegistrarError("No fue posible compactar la BD. Detalles: " + Environment.NewLine + ex.Message);
+                Exception InnerEx = ex.InnerException;
+                string MoreDetails = InnerEx != null ? Environment.NewLine + "Mas detalles: " + InnerEx.Message : "";
+
+                if (InnerEx != null)
+                    MoreDetails += InnerEx.InnerException != null ? Environment.NewLine + InnerEx.InnerException.Message : "";
+
+                Logger.RegistrarError("No fue posible compactar la BD. Detalles: " + Environment.NewLine + ex.Message + MoreDetails);
                 DropDB(ConnectionString, DBName, Logger);
                 return 1;
             }
@@ -187,7 +211,13 @@ namespace SQLServerDBManager
                 oConnection.Disconnect();
             }
             catch(Exception ex) {
-                Logger.RegistrarError("No fue posible posible borrar la BD '"+DBName+"'.  Detalles: " + Environment.NewLine + ex.Message);
+                Exception InnerEx = ex.InnerException;
+                string MoreDetails = InnerEx != null ? Environment.NewLine + "Mas detalles: " + InnerEx.Message : "";
+
+                if (InnerEx != null)
+                    MoreDetails += InnerEx.InnerException != null ? Environment.NewLine + InnerEx.InnerException.Message : "";
+
+                Logger.RegistrarError("No fue posible posible borrar la BD '"+DBName+"'.  Detalles: " + Environment.NewLine + ex.Message + MoreDetails);
                 return 1;
             }         
 
@@ -243,15 +273,13 @@ namespace SQLServerDBManager
                             }
 
                             foreach (Index tbd in tobeDeleted)
-                            {
-                                //if(tbd.Name.Contains("OrganizationLevel_OrganizationNode"))
+                            {                                
                                 if (tbd.IndexType == IndexType.SecondaryXmlIndex)
                                     tbd.Drop();
                             }
 
                             foreach (Index tbd in tobeDeleted)
-                            {
-                                //if(tbd.Name.Contains("OrganizationLevel_OrganizationNode"))
+                            {                                
                                 if (tbd.State != SqlSmoState.Dropped)
                                 {
                                     if (tbd.IndexType != IndexType.SecondaryXmlIndex)
@@ -299,7 +327,6 @@ namespace SQLServerDBManager
 
                         foreach (Column tbd in tobeDeleted)
                         {
-                            //if (tbd.Name.Contains("OrganizationLevel"))
                             tbd.Drop();
                         }
                     }
@@ -364,7 +391,13 @@ namespace SQLServerDBManager
             }
             catch (Exception ex)
             {
-                Logger.RegistrarError("No fue posible limpiar la BD. Detalles: " + Environment.NewLine + ex.Message);
+                Exception InnerEx = ex.InnerException;
+                string MoreDetails = InnerEx != null ? Environment.NewLine + "Mas detalles: " + InnerEx.Message : "";
+
+                if (InnerEx != null)
+                    MoreDetails += InnerEx.InnerException != null ? Environment.NewLine + InnerEx.InnerException.Message : "";
+
+                Logger.RegistrarError("No fue posible limpiar la BD. Detalles: " + Environment.NewLine + ex.Message + MoreDetails);
                 DropDB(ConnectionString, DBname, Logger);
                 return 1;
             }
@@ -391,7 +424,13 @@ namespace SQLServerDBManager
             }
             catch (Exception ex)
             {
-                Logger.RegistrarError("No fue posible ejecutar el script. Detalles: " + Environment.NewLine + ex.Message);
+                Exception InnerEx = ex.InnerException;
+                string MoreDetails = InnerEx != null ? Environment.NewLine + "Mas detalles: " + InnerEx.Message : "";
+
+                if (InnerEx != null)
+                    MoreDetails += InnerEx.InnerException != null ? Environment.NewLine + InnerEx.InnerException.Message : "";
+
+                Logger.RegistrarError("No fue posible ejecutar el script. Detalles: " + Environment.NewLine + ex.Message + MoreDetails);
                 DropDB(ConnectionString, DBname, Logger);
                 return 1;
             }
